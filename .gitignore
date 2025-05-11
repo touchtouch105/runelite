@@ -11,3 +11,5 @@ project.properties
 .vscode
 .factorypath
 .DS_Store
+/runelite-client/src/main/java/net/runelite/client/plugins/soundswapper
+/runelite-client/src/main/java/net/runelite/client/plugins/phosanisshadows
