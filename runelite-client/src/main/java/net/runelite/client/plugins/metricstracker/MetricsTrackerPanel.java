@@ -6,16 +6,11 @@ import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.PluginPanel;
 import net.runelite.client.ui.components.DragAndDropReorderPane;
 import net.runelite.client.util.ImageUtil;
-import net.runelite.client.util.SwingUtil;
 
 import javax.inject.Inject;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.event.PopupMenuEvent;
-import javax.swing.event.PopupMenuListener;
-import javax.swing.plaf.basic.BasicButtonUI;
 import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,26 +19,20 @@ public class MetricsTrackerPanel extends PluginPanel
     @Inject
     private Client client;
     private final MetricsTrackerPlugin plugin;
-    private final String PANEL_KEY_STRING = "PanelStringMasterKey";
-    private JPanel actionsPanel = new JPanel();
     private final JPanel overallPanel = new JPanel();
-
-    private final JLabel totalQuantity = new JLabel( "Killed" );
-    private final JLabel totalRate = new JLabel( "Per hour" );
+    private final JLabel totalQuantity = new JLabel( "Killed:" );
+    private final JLabel totalRate = new JLabel( "KPH:" );
+    private final JLabel altQuantity = new JLabel( "Damage:" );
+    private final JLabel altRate = new JLabel( "DPS:" );
     private final Map< MetricsInfoBox.infoBoxType, Map< String, MetricsInfoBox > > infoBoxes = new HashMap<>();
     private final Map< MetricsInfoBox.infoBoxType, MetricsManager > metrics = new HashMap<>();
-    private final JButton monstersButton = new JButton();
-    private final JButton dpsButton = new JButton();
-    private MetricsTrackerConfig config;
-    private ImageIcon icon;
     private MetricsInfoBox.infoBoxType currentDisplayType = MetricsInfoBox.infoBoxType.MONSTERS;
     JComponent infoBoxPanel;
 
-    public MetricsTrackerPanel( MetricsTrackerPlugin metricsTrackerPlugin, MetricsTrackerConfig config, Client client )
+    public MetricsTrackerPanel( MetricsTrackerPlugin metricsTrackerPlugin, Client client )
     {
         super();
         this.plugin = metricsTrackerPlugin;
-        this.config = config;
         this.client = client;
 
         setBorder( new EmptyBorder( 6, 6, 6, 6 ) );
@@ -69,100 +58,34 @@ public class MetricsTrackerPanel extends PluginPanel
         popupMenu.setBorder( new EmptyBorder( 5, 5, 5, 5 ) );
         popupMenu.add( reset );
 
-        popupMenu.addPopupMenuListener( new PopupMenuListener()
-        {
-            @Override
-            public void popupMenuWillBecomeVisible( PopupMenuEvent popupMenuEvent )
-            {
-            }
-
-            @Override
-            public void popupMenuWillBecomeInvisible( PopupMenuEvent popupMenuEvent )
-            {
-            }
-
-            @Override
-            public void popupMenuCanceled( PopupMenuEvent popupMenuEvent )
-            {
-            }
-        });
         overallPanel.setComponentPopupMenu( popupMenu );
 
         final JLabel overallIcon = new JLabel( new ImageIcon( ImageUtil.loadImageResource(metricsTrackerPlugin.getClass(), "/metrics_tracker_icon.png" ) ) );
-        final BufferedImage expandedImg = ImageUtil.loadImageResource(metricsTrackerPlugin.getClass(), "/metrics_tracker_icon.png" );
-        icon = new ImageIcon(expandedImg);;
-
         final JPanel overallInfo = new JPanel();
+
         overallInfo.setBackground( ColorScheme.DARKER_GRAY_COLOR );
-        overallInfo.setLayout( new GridLayout( 2, 1 ) );
+        overallInfo.setLayout( new GridLayout( 2, 2 ) );
         overallInfo.setBorder( new EmptyBorder( 0, 10, 0, 0) );
 
         totalQuantity.setFont( FontManager.getRunescapeSmallFont() );
         totalRate.setFont( FontManager.getRunescapeSmallFont() );
+        altQuantity.setFont( FontManager.getRunescapeSmallFont() );
+        altRate.setFont( FontManager.getRunescapeSmallFont() );
 
         overallInfo.add( totalQuantity );
         overallInfo.add( totalRate );
+        overallInfo.add( altQuantity );
+        overallInfo.add( altRate );
 
         overallPanel.add( overallIcon, BorderLayout.WEST );
         overallPanel.add( overallInfo, BorderLayout.CENTER );
 
         infoBoxPanel = new DragAndDropReorderPane();
-        actionsPanel = buildActionsPanel();
 
-        layoutPanel.add( actionsPanel );
         layoutPanel.add( overallPanel );
         layoutPanel.add( infoBoxPanel );
     }
 
-    private JPanel buildActionsPanel()
-    {
-        final JPanel actionsContainer = new JPanel();
-        actionsContainer.setLayout(new BorderLayout());
-        actionsContainer.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-        actionsContainer.setPreferredSize(new Dimension(0, 30));
-        actionsContainer.setBorder(new EmptyBorder(5, 5, 5, 10));
-
-        final JPanel viewControls = new JPanel(new GridLayout(1, 3, 10, 0));
-        viewControls.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-
-        SwingUtil.removeButtonDecorations(monstersButton);
-        monstersButton.setIcon(icon);
-        monstersButton.setSelectedIcon(icon);
-        SwingUtil.addModalTooltip(monstersButton, "", "Monsters");
-        monstersButton.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-        monstersButton.setUI(new BasicButtonUI()); // substance breaks the layout
-        monstersButton.addActionListener(ev -> loadInfoBoxes( MetricsInfoBox.infoBoxType.MONSTERS ));
-        viewControls.add(monstersButton);
-
-        SwingUtil.removeButtonDecorations(dpsButton);
-        dpsButton.setIcon(icon);
-        dpsButton.setSelectedIcon(icon);
-        SwingUtil.addModalTooltip(dpsButton, "", "DPS");
-        dpsButton.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-        dpsButton.setUI(new BasicButtonUI()); // substance breaks the layout
-        dpsButton.addActionListener(ev -> loadInfoBoxes( MetricsInfoBox.infoBoxType.DPS ));
-        viewControls.add(dpsButton);
-
-        final JPanel leftTitleContainer = new JPanel(new BorderLayout(5, 0));
-        leftTitleContainer.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-
-        actionsContainer.add(viewControls, BorderLayout.EAST);
-        actionsContainer.add(leftTitleContainer, BorderLayout.WEST);
-
-        actionsContainer.setVisible( true );
-        return actionsContainer;
-    }
-
-    private void loadMetrics( MetricsInfoBox.infoBoxType type )
-    {
-        if ( !infoBoxes.containsKey( type )
-        ||   metrics.containsKey( type ) )
-        {
-            return;
-        }
-
-        MetricsManager mgr = metrics.get( type );
-    }
     public void addEvent( Event event )
     {
         MetricsInfoBox.infoBoxType type = getInfoBoxType( event.getType() );
@@ -219,11 +142,19 @@ public class MetricsTrackerPanel extends PluginPanel
         if ( type == MetricsInfoBox.infoBoxType.MONSTERS
         &&   event.getType() == Event.eventType.DAMAGE_DEALT )
         {
-            infoBox.update( infoBoxPanel, eventOriginalName, metric.getCumulativeQuantity( eventOriginalName ), metric.getQuantityPerHour( eventOriginalName ), metric.getQuantityPerSecond( event.getName() ) );
+            infoBox.update( infoBoxPanel,
+                            eventOriginalName,
+                            metric.getCumulativeQuantity( eventOriginalName ),
+                            metric.getQuantityPerHour( eventOriginalName ),
+                            metric.getCumulativeQuantity( event.getName() ),
+                            metric.getQuantityPerSecond( event.getName() ) );
         }
         else
         {
-            infoBox.update( infoBoxPanel, eventOriginalName, metric.getCumulativeQuantity( eventOriginalName ), metric.getQuantityPerHour( eventOriginalName ) );
+            infoBox.update( infoBoxPanel,
+                            eventOriginalName,
+                            metric.getCumulativeQuantity( eventOriginalName ),
+                            metric.getQuantityPerHour( eventOriginalName ) );
         }
     }
 
@@ -260,24 +191,7 @@ public class MetricsTrackerPanel extends PluginPanel
         }
 
         infoBoxes.clear();
-
-        totalQuantity.setText( "Total:" );
-        totalRate.setText( "Total Rate:" );
-    }
-
-    public void loadInfoBoxes( MetricsInfoBox.infoBoxType type )
-    {
-        currentDisplayType = type;
-
-        for ( MetricsInfoBox.infoBoxType t : infoBoxes.keySet() )
-        {
-            for ( String name : infoBoxes.get( t ).keySet() )
-            {
-                infoBoxes.get( t ).get( name ).reset( infoBoxPanel );
-            }
-        }
-
-        refreshActive();
+        updateOverallTrackerText();
     }
 
     public void removeInfoBox( MetricsInfoBox.infoBoxType type, String name )
@@ -305,8 +219,8 @@ public class MetricsTrackerPanel extends PluginPanel
         {
             return;
         }
-        infoBoxesLocal = infoBoxes.get( type );
 
+        infoBoxesLocal = infoBoxes.get( type );
         int sz = infoBoxesLocal.keySet().size() - 1;
         if ( sz >= 0 )
         {
@@ -330,46 +244,50 @@ public class MetricsTrackerPanel extends PluginPanel
     {
         String quantity;
         String rate;
+        String altQ;
+        String altR;
 
         if ( !metrics.containsKey( currentDisplayType ) )
         {
-            totalQuantity.setText( "Total Killed:" );
-            totalRate.setText( "Total Per Hour:" );
+            totalQuantity.setText( "Killed:" );
+            totalRate.setText( "KPH:" );
+            altQuantity.setText( "Damage:" );
+            altRate.setText( "DPS:" );
             return;
         }
 
         switch ( currentDisplayType )
         {
-            case DPS:
-                quantity = "Total Damage:" + metrics.get( currentDisplayType ).getOverallCumulativeQuantity();
-                rate = "Total DPS:" + metrics.get( currentDisplayType ).getOverallPerSecond();
-                break;
             case MONSTERS:
             default:
-                quantity = "Total Killed:" + metrics.get( currentDisplayType ).getOverallCumulativeQuantity();
-                rate = "Total Per Hour:" + metrics.get( currentDisplayType ).getOverallPerHour();
+                quantity = "Killed:" + metrics.get( currentDisplayType ).getOverallCumulativeQuantity( false );
+                rate = "KPH:" + metrics.get( currentDisplayType ).getOverallPerHour( false );
+                altQ = "Damage:" + metrics.get( currentDisplayType ).getOverallCumulativeQuantity( true );
+                altR = "DPS:" + metrics.get( currentDisplayType ).getOverallPerSecond( true );
                 break;
         }
 
         totalQuantity.setText( quantity );
         totalRate.setText( rate );
+        altQuantity.setText( altQ );
+        altRate.setText( altR );
     }
 
     public void refreshActive()
     {
         Event event;
-
+        String infoBoxKey;
         for ( MetricsInfoBox.infoBoxType type : metrics.keySet() )
         {
             if ( type == currentDisplayType )
             {
                 for ( String key : metrics.get( type ).getKeys() )
                 {
-                    String metricKey = metrics.get( type ).getMetricKey( key );
+                    infoBoxKey = metrics.get( type ).getMetricKey( key );
                     event = metrics.get( type ).lastEvent.get( key );
                     event.quantity = 0;
 
-                    updateInfoBox( type, event, metricKey );
+                    updateInfoBox( type, event, infoBoxKey );
                 }
             }
         }

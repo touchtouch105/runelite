@@ -5,13 +5,10 @@ import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.DynamicGridLayout;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.components.MouseDragEventForwarder;
-import net.runelite.client.ui.components.ProgressBar;
 import net.runelite.client.util.ColorUtil;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.event.PopupMenuEvent;
-import javax.swing.event.PopupMenuListener;
 import java.awt.*;
 
 public class MetricsInfoBox extends JPanel
@@ -19,23 +16,20 @@ public class MetricsInfoBox extends JPanel
 	public enum infoBoxType
 	{
 		NONE,
-		MONSTERS,
-		DPS
+		MONSTERS
 	}
 
 	private static final String HTML_LABEL_TEMPLATE =
 		"<html><body style='color:%s'>%s<span style='color:white'>%s</span></body></html>";
-
-	private static final EmptyBorder DEFAULT_PROGRESS_WRAPPER_BORDER = new EmptyBorder( 0, 7, 7, 7 );
-	private static final EmptyBorder COMPACT_PROGRESS_WRAPPER_BORDER = new EmptyBorder( 5, 1, 5, 5 );
 
 	@Getter
 	private final String name;
 	private final JPanel container = new JPanel();
 	private final JPanel headerPanel = new JPanel();
 	private final JPanel statsPanel = new JPanel();
-	private final JPanel progressWrapper = new JPanel();
-	private final ProgressBar progressBar = new ProgressBar();
+	private final JPanel namePanel = new JPanel();
+	private final JLabel emptyLabel = new JLabel();
+	private final JLabel nameStat = new JLabel();
 	private final JLabel topLeftStat = new JLabel();
 	private final JLabel bottomLeftStat = new JLabel();
 	private final JLabel topRightStat = new JLabel();
@@ -68,26 +62,8 @@ public class MetricsInfoBox extends JPanel
 		popupMenu.add( reset );
 		popupMenu.add( resetOthers );
 
-		popupMenu.addPopupMenuListener( new PopupMenuListener()
-		{
-			@Override
-			public void popupMenuWillBecomeVisible( PopupMenuEvent popupMenuEvent )
-			{
-			}
-
-			@Override
-			public void popupMenuWillBecomeInvisible( PopupMenuEvent popupMenuEvent )
-			{
-			}
-
-			@Override
-			public void popupMenuCanceled( PopupMenuEvent popupMenuEvent )
-			{
-			}
-		});
-
 		headerPanel.setBackground( ColorScheme.DARKER_GRAY_COLOR );
-		headerPanel.setLayout( new BorderLayout() );
+		headerPanel.setLayout( new DynamicGridLayout( 2, 1,0, -7 ) );
 
 		statsPanel.setLayout( new DynamicGridLayout( 2, 2 ) );
 		statsPanel.setBackground( ColorScheme.DARKER_GRAY_COLOR );
@@ -103,18 +79,24 @@ public class MetricsInfoBox extends JPanel
 		statsPanel.add( bottomLeftStat );
 		statsPanel.add( bottomRightStat );
 
+		namePanel.setLayout( new BorderLayout() );
+		namePanel.setBackground( ColorScheme.DARKER_GRAY_COLOR );
+		namePanel.setBorder( new EmptyBorder( 1, 2, 1, 2 ) );
+
+		nameStat.setFont( FontManager.getRunescapeSmallFont() );
+
+		namePanel.add( nameStat );
+
+		headerPanel.add( namePanel );
 		headerPanel.add( statsPanel, BorderLayout.CENTER );
 		container.add( headerPanel, BorderLayout.NORTH );
 
 		container.setComponentPopupMenu( popupMenu );
-		progressBar.setComponentPopupMenu( popupMenu );
 
 		// forward mouse drag events to parent panel for drag and drop reordering
 		MouseDragEventForwarder mouseDragEventForwarder = new MouseDragEventForwarder( panel );
 		container.addMouseListener( mouseDragEventForwarder );
 		container.addMouseMotionListener( mouseDragEventForwarder );
-		progressBar.addMouseListener( mouseDragEventForwarder );
-		progressBar.addMouseMotionListener( mouseDragEventForwarder );
 
 		add( container, BorderLayout.NORTH );
 	}
@@ -130,12 +112,12 @@ public class MetricsInfoBox extends JPanel
 		SwingUtilities.invokeLater( () -> rebuildAsync( panel, name, quantity, qph ) );
 	}
 
-	void update( JComponent panel, String name, long quantity, float qph, float qps )
+	void update( JComponent panel, String name, long quantity, float qph, long altQuantity, float altRate )
 	{
-		SwingUtilities.invokeLater( () -> rebuildAsync( panel, name, quantity, qph, qps ) );
+		SwingUtilities.invokeLater( () -> rebuildAsync( panel, name, quantity, qph, altQuantity, altRate ) );
 	}
 
-	private void rebuildAsync( JComponent panel, String name, long quantity, float qph, float qps )
+	private void rebuildAsync( JComponent panel, String name, long quantity, float qph, long altQuantity, float altRate )
 	{
 		if ( getParent() != panel )
 		{
@@ -146,10 +128,11 @@ public class MetricsInfoBox extends JPanel
 		switch ( type )
 		{
 			case MONSTERS:
-				topLeftStat.setText(htmlLabel( "Monster:",  name ) );
-				topRightStat.setText(htmlLabel( "Kills:", quantity ) );
-				bottomLeftStat.setText(htmlLabel( "KPH:",  qph ) );
-				bottomRightStat.setText(htmlLabel( "DPS:", qps ) );
+				nameStat.setText( htmlLabel( "", name ) );
+				topLeftStat.setText( htmlLabel( "Kills:", quantity ) );
+				topRightStat.setText( htmlLabel( "KPH:",  qph ) );
+				bottomLeftStat.setText( htmlLabel( "Damage:", altQuantity ) );
+				bottomRightStat.setText( htmlLabel( "DPS:", altRate ) );
 				break;
 		}
 	}
@@ -165,12 +148,11 @@ public class MetricsInfoBox extends JPanel
 		switch ( type )
 		{
 			case MONSTERS:
-				topLeftStat.setText(htmlLabel( "Monster:",  name ) );
-				topRightStat.setText(htmlLabel( "Kills:", quantity ) );
-				bottomLeftStat.setText(htmlLabel( "KPH:",  qph ) );
+				nameStat.setText( htmlLabel( "", name ) );
+				topLeftStat.setText( htmlLabel( "Kills:", quantity ) );
+				topRightStat.setText( htmlLabel( "KPH:",  qph ) );
 				break;
 		}
-
 	}
 
 	static String htmlLabel( String key, float value )
@@ -189,5 +171,4 @@ public class MetricsInfoBox extends JPanel
 	{
 		return String.format( HTML_LABEL_TEMPLATE, ColorUtil.toHexColor( ColorScheme.LIGHT_GRAY_COLOR ), key, valueStr );
 	}
-
 }

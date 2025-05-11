@@ -54,7 +54,7 @@ public class MetricsTrackerPlugin extends Plugin
     @Override
     protected void startUp() throws Exception
     {
-         loggerPanel = new MetricsTrackerPanel( this , config, client );
+         loggerPanel = new MetricsTrackerPanel( this, client );
          final BufferedImage icon = ImageUtil.loadImageResource( getClass(), ICON_FILE );
          navigationButton = NavigationButton.builder()
             .tooltip( PLUGIN_NAME )
@@ -82,7 +82,6 @@ public class MetricsTrackerPlugin extends Plugin
     @Subscribe
     public void onGameTick( GameTick gameTick )
     {
-
         if ( config.refreshRate() > 0 )
         {
             tickCounter = ( tickCounter + 1 ) % config.refreshRate();

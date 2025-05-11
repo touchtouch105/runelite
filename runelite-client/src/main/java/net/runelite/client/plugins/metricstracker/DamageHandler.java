@@ -67,6 +67,7 @@ public class DamageHandler
                     eventsToValidate.remove( actor );
                 }
             }
+            
             // Delete lists after a minute of inactivity to avoid any memory leaks
             tickCounter++;
             if ( tickCounter == ticksToSelfDestruct )
@@ -85,6 +86,7 @@ public class DamageHandler
         {
             return true;
         }
+
         return false;
     }
 

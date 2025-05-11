@@ -39,11 +39,4 @@ public class Event
         this.name = null;
         this.quantity = 0;
     }
-
-    public Event( String name, int quantity )
-    {
-        this.type = null;
-        this.name = name;
-        this.quantity = quantity;
-    }
 }

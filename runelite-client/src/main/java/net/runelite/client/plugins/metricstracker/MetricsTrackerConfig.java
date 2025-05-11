@@ -7,10 +7,9 @@ public interface MetricsTrackerConfig extends Config
 {
     @ConfigItem(
             keyName = "refreshRate",
-            name = "Refresh Rate",
+            name = "Passive Refresh Rate",
             description = "Number of ticks per passive refresh, 0 to disable",
             position = 1
     )
     default int refreshRate() { return 5; }
-
 }
