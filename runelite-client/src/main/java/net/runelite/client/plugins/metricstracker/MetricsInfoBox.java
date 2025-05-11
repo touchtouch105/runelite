@@ -130,6 +130,30 @@ public class MetricsInfoBox extends JPanel
 		SwingUtilities.invokeLater( () -> rebuildAsync( panel, name, quantity, qph ) );
 	}
 
+	void update( JComponent panel, String name, long quantity, float qph, float qps )
+	{
+		SwingUtilities.invokeLater( () -> rebuildAsync( panel, name, quantity, qph, qps ) );
+	}
+
+	private void rebuildAsync( JComponent panel, String name, long quantity, float qph, float qps )
+	{
+		if ( getParent() != panel )
+		{
+			panel.add( this );
+			panel.revalidate();
+		}
+
+		switch ( type )
+		{
+			case MONSTERS:
+				topLeftStat.setText(htmlLabel( "Monster:",  name ) );
+				topRightStat.setText(htmlLabel( "Kills:", quantity ) );
+				bottomLeftStat.setText(htmlLabel( "KPH:",  qph ) );
+				bottomRightStat.setText(htmlLabel( "DPS:", qps ) );
+				break;
+		}
+	}
+
 	private void rebuildAsync( JComponent panel, String name, long quantity, float qph )
 	{
 		if ( getParent() != panel )
@@ -144,11 +168,6 @@ public class MetricsInfoBox extends JPanel
 				topLeftStat.setText(htmlLabel( "Monster:",  name ) );
 				topRightStat.setText(htmlLabel( "Kills:", quantity ) );
 				bottomLeftStat.setText(htmlLabel( "KPH:",  qph ) );
-				break;
-			case DPS:
-				topLeftStat.setText(htmlLabel( "Monster:",  name ) );
-				topRightStat.setText(htmlLabel( "Damage:", quantity ) );
-				bottomLeftStat.setText(htmlLabel( "DPS:",  qph ) );
 				break;
 		}
 
@@ -170,4 +189,5 @@ public class MetricsInfoBox extends JPanel
 	{
 		return String.format( HTML_LABEL_TEMPLATE, ColorUtil.toHexColor( ColorScheme.LIGHT_GRAY_COLOR ), key, valueStr );
 	}
+
 }

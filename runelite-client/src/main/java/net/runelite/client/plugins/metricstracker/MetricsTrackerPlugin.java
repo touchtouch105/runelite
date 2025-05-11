@@ -49,6 +49,7 @@ public class MetricsTrackerPlugin extends Plugin
     private MetricsTrackerPanel loggerPanel;
     private EventConsumer consumer;
     private NavigationButton navigationButton;
+    private int tickCounter = 0;
 
     @Override
     protected void startUp() throws Exception
@@ -81,9 +82,14 @@ public class MetricsTrackerPlugin extends Plugin
     @Subscribe
     public void onGameTick( GameTick gameTick )
     {
-        if ( !config.monstersKilled() )
+
+        if ( config.refreshRate() > 0 )
         {
-            return;
+            tickCounter = ( tickCounter + 1 ) % config.refreshRate();
+            if ( tickCounter == 0 )
+            {
+                loggerPanel.refreshActive();
+            }
         }
 
         damageHandler.tick( consumer, npcUtil );
@@ -93,10 +99,6 @@ public class MetricsTrackerPlugin extends Plugin
     @Subscribe
     public void onHitsplatApplied( HitsplatApplied event )
     {
-        if ( !config.monstersKilled() )
-        {
-            return;
-        }
 
         Actor actor = event.getActor();
         Hitsplat hitsplat = event.getHitsplat();
@@ -107,8 +109,7 @@ public class MetricsTrackerPlugin extends Plugin
             damageHandler.emitDamageDoneEvent( actor, hitsplat, consumer );
         }
 
-        if ( damageHandler.isMonsterKilledEvent( hitsplat, actor, npcUtil )
-        &&   config.monstersKilled() )
+        if ( damageHandler.isMonsterKilledEvent( hitsplat, actor, npcUtil ) )
         {
             damageHandler.emitMonsterKilledEvent( actor );
         }

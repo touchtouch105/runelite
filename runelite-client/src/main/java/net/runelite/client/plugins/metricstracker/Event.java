@@ -20,23 +20,30 @@ public class Event
 
     // Type of the data point being created
     @Getter
-    public eventType Type;
+    public eventType type;
     @Getter
     public String name;
     @Getter
-    public int Quantity;
+    public int quantity;
 
     public Event( eventType type, String name, int quantity )
     {
-        this.Type = type;
+        this.type = type;
         this.name = name;
-        this.Quantity = quantity;
+        this.quantity = quantity;
     }
 
     public Event( eventType type )
     {
-        this.Type = type;
+        this.type = type;
         this.name = null;
-        this.Quantity = 0;
+        this.quantity = 0;
+    }
+
+    public Event( String name, int quantity )
+    {
+        this.type = null;
+        this.name = name;
+        this.quantity = quantity;
     }
 }
