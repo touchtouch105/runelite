@@ -16,7 +16,18 @@ public class MetricsInfoBox extends JPanel
 	public enum infoBoxType
 	{
 		NONE,
-		MONSTERS
+		MONSTERS,
+		LOOT
+	}
+
+	private enum textLocation
+	{
+		NAME,
+		TOP_LEFT,
+		TOP_RIGHT,
+		BOTTOM_LEFT,
+		BOTTOM_RIGHT,
+		NUM_TEXT_LOCATIONS
 	}
 
 	private static final String HTML_LABEL_TEMPLATE =
@@ -36,12 +47,29 @@ public class MetricsInfoBox extends JPanel
 	private final JLabel bottomRightStat = new JLabel();
 	private JComponent panel;
 	private infoBoxType type = infoBoxType.NONE;
+	private final String[] displayText;
+	private final String errorDisplayText[] = { "", "Quantity:", "Per Hour:", "Alt Quantity:", "Per Hour:" };
+	private final String monsterDisplayText[] = { "", "Killed:", "KPH:", "Damage:", "DPS:" };
+	private final String lootDisplayText[] = { "", "Drops:", "Per Hour", "Value:", "GP/H:" };
 
 	MetricsInfoBox( MetricsTrackerPlugin plugin, JComponent panel, String name, infoBoxType type )
 	{
 		this.name = name;
 		this.panel = panel;
 		this.type = type;
+
+		switch ( type )
+		{
+			case MONSTERS:
+				this.displayText = monsterDisplayText;
+				break;
+			case LOOT:
+				this.displayText = lootDisplayText;
+				break;
+			default:
+				this.displayText = errorDisplayText;
+				break;
+		}
 
 		setLayout( new BorderLayout() );
 		setBorder( new EmptyBorder( 5, 0, 0, 0 ) );
@@ -125,16 +153,11 @@ public class MetricsInfoBox extends JPanel
 			panel.revalidate();
 		}
 
-		switch ( type )
-		{
-			case MONSTERS:
-				nameStat.setText( htmlLabel( "", name ) );
-				topLeftStat.setText( htmlLabel( "Kills:", quantity ) );
-				topRightStat.setText( htmlLabel( "KPH:",  qph ) );
-				bottomLeftStat.setText( htmlLabel( "Damage:", altQuantity ) );
-				bottomRightStat.setText( htmlLabel( "DPS:", altRate ) );
-				break;
-		}
+		nameStat.setText( htmlLabel( displayText[ textLocation.NAME.ordinal() ], name ) );
+		topLeftStat.setText( htmlLabel( displayText[ textLocation.TOP_LEFT.ordinal() ], quantity ) );
+		topRightStat.setText( htmlLabel( displayText[ textLocation.TOP_RIGHT.ordinal() ], qph ) );
+		bottomLeftStat.setText( htmlLabel( displayText[ textLocation.BOTTOM_LEFT.ordinal() ], altQuantity ) );
+		bottomRightStat.setText( htmlLabel( displayText[ textLocation.BOTTOM_RIGHT.ordinal() ], altRate ) );
 	}
 
 	private void rebuildAsync( JComponent panel, String name, long quantity, float qph )
@@ -145,14 +168,9 @@ public class MetricsInfoBox extends JPanel
 			panel.revalidate();
 		}
 
-		switch ( type )
-		{
-			case MONSTERS:
-				nameStat.setText( htmlLabel( "", name ) );
-				topLeftStat.setText( htmlLabel( "Kills:", quantity ) );
-				topRightStat.setText( htmlLabel( "KPH:",  qph ) );
-				break;
-		}
+		nameStat.setText( htmlLabel( displayText[ textLocation.NAME.ordinal() ], name ) );
+		topLeftStat.setText( htmlLabel( displayText[ textLocation.TOP_LEFT.ordinal() ], quantity ) );
+		topRightStat.setText( htmlLabel( displayText[ textLocation.TOP_RIGHT.ordinal() ], qph ) );
 	}
 
 	static String htmlLabel( String key, float value )

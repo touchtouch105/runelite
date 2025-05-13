@@ -3,7 +3,9 @@ package net.runelite.client.plugins.metricstracker;
 import net.runelite.api.Actor;
 import net.runelite.api.Hitsplat;
 import net.runelite.api.NPC;
+import net.runelite.api.events.HitsplatApplied;
 import net.runelite.api.gameval.NpcID;
+import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.game.NpcUtil;
 
 import java.util.HashMap;
@@ -12,9 +14,26 @@ public class DamageHandler
 {
     private int tickCounter = 0;
     private final int ticksToSelfDestruct = 100;
-    private HashMap< Actor, Event > eventsToValidate = new HashMap<>();
+    private HashMap< Actor, MetricEvent> eventsToValidate = new HashMap<>();
 
-    public boolean isMonsterKilledEvent( Hitsplat hitsplat, Actor actor, NpcUtil npcUtil )
+    public void hitsplatApplied( HitsplatApplied hitsplatApplied, NpcUtil npcUtil, EventBus eventBus )
+    {
+        Actor actor = hitsplatApplied.getActor();
+        Hitsplat hitsplat = hitsplatApplied.getHitsplat();
+
+        if ( hitsplat.isMine()
+                && ( actor instanceof NPC) )
+        {
+            emitDamageDoneEvent( actor, hitsplat, eventBus );
+        }
+
+        if ( isMonsterKilledEvent( hitsplat, actor, npcUtil ) )
+        {
+            emitMonsterKilledEvent( actor );
+        }
+    }
+
+    private boolean isMonsterKilledEvent( Hitsplat hitsplat, Actor actor, NpcUtil npcUtil )
     {
         if ( !( actor instanceof NPC ) )
         {
@@ -38,20 +57,20 @@ public class DamageHandler
         return false;
     }
 
-    public void emitMonsterKilledEvent( Actor actor )
+    private void emitMonsterKilledEvent( Actor actor )
     {
-        Event event = new Event( Event.eventType.MONSTERS_KILLED, actor.getName(), 1 );
+        MetricEvent metricEvent = new MetricEvent( MetricEvent.eventType.MONSTERS_KILLED, actor.getName(), 1 );
         tickCounter = 0;
-        eventsToValidate.put( actor, event );
+        eventsToValidate.put( actor, metricEvent);
     }
 
-    public void emitDamageDoneEvent( Actor actor, Hitsplat hitsplat, EventConsumer consumer )
+    private void emitDamageDoneEvent( Actor actor, Hitsplat hitsplat, EventBus eventBus )
     {
-        Event event = new Event( Event.eventType.DAMAGE_DEALT, actor.getName(), hitsplat.getAmount() );
-        consumer.addPendingEvent( event );
+        MetricEvent metricEvent = new MetricEvent( MetricEvent.eventType.DAMAGE_DEALT, actor.getName(), hitsplat.getAmount() );
+        eventBus.post( metricEvent );
     }
 
-    public void tick( EventConsumer consumer, NpcUtil npcUtil )
+    public void tick( NpcUtil npcUtil, EventBus eventBus )
     {
         int sz = eventsToValidate.keySet().size() - 1;
         if ( sz >= 0 )
@@ -63,11 +82,11 @@ public class DamageHandler
 
                 if ( isActorDead( actor, npcUtil ) )
                 {
-                    consumer.addPendingEvent( eventsToValidate.get( actor ) );
+                    eventBus.post( eventsToValidate.get( actor ) );
                     eventsToValidate.remove( actor );
                 }
             }
-            
+
             // Delete lists after a minute of inactivity to avoid any memory leaks
             tickCounter++;
             if ( tickCounter == ticksToSelfDestruct )

@@ -2,19 +2,18 @@ package net.runelite.client.plugins.metricstracker;
 
 import com.google.inject.Provides;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.Actor;
 import net.runelite.api.Client;
-import net.runelite.api.Hitsplat;
-import net.runelite.api.NPC;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.HitsplatApplied;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.game.ItemManager;
 import net.runelite.client.game.NpcUtil;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.loottracker.LootReceived;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.util.ImageUtil;
@@ -43,13 +42,16 @@ public class MetricsTrackerPlugin extends Plugin
     private MetricsTrackerConfig config;
     @Inject
     private ClientToolbar clientToolbar;
+    @Inject
+    private ItemManager itemManager;
     private static final String ICON_FILE = "/metrics_tracker_icon.png";
     private static final String PLUGIN_NAME = "Metrics Tracker";
     private final DamageHandler damageHandler = new DamageHandler();
+    private final LootHandler lootHandler = new LootHandler();
     private MetricsTrackerPanel loggerPanel;
-    private EventConsumer consumer;
     private NavigationButton navigationButton;
     private int tickCounter = 0;
+    private boolean lootInvalid = false;
 
     @Override
     protected void startUp() throws Exception
@@ -63,7 +65,6 @@ public class MetricsTrackerPlugin extends Plugin
             .panel( loggerPanel )
             .build();
         clientToolbar.addNavigation( navigationButton );
-        consumer = new EventConsumer( loggerPanel );
     }
 
     @Override
@@ -80,6 +81,18 @@ public class MetricsTrackerPlugin extends Plugin
     }
 
     @Subscribe
+    public void onLootReceived( final LootReceived lootReceived )
+    {
+        lootHandler.lootReceived( lootReceived, itemManager, eventBus );
+    }
+
+    @Subscribe
+    public void onMetricEvent( MetricEvent metricEvent )
+    {
+        loggerPanel.addEvent( metricEvent );
+    }
+
+    @Subscribe
     public void onGameTick( GameTick gameTick )
     {
         if ( config.refreshRate() > 0 )
@@ -91,27 +104,13 @@ public class MetricsTrackerPlugin extends Plugin
             }
         }
 
-        damageHandler.tick( consumer, npcUtil );
-        consumer.consumePendingEvents();
+        damageHandler.tick( npcUtil, eventBus );
     }
 
     @Subscribe
     public void onHitsplatApplied( HitsplatApplied event )
     {
-
-        Actor actor = event.getActor();
-        Hitsplat hitsplat = event.getHitsplat();
-
-        if ( hitsplat.isMine()
-        &&   ( actor instanceof NPC) )
-        {
-            damageHandler.emitDamageDoneEvent( actor, hitsplat, consumer );
-        }
-
-        if ( damageHandler.isMonsterKilledEvent( hitsplat, actor, npcUtil ) )
-        {
-            damageHandler.emitMonsterKilledEvent( actor );
-        }
+        damageHandler.hitsplatApplied( event, npcUtil, eventBus );
     }
 
     public void resetState()

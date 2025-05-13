@@ -15,7 +15,7 @@ public class MetricsManager
     private final static float MSEC_PER_SEC = 1000;
     private final static float SEC_PER_MIN = 60;
     private final static float MIN_PER_HOUR = 60;
-    public HashMap< String, Event > lastEvent;
+    public HashMap< String, MetricEvent> lastEvent;
     private HashMap< String, Long > startTimes;
     private HashMap< String, Long > quantities;
     private HashMap< String, String > remappedMetrics;
@@ -27,20 +27,20 @@ public class MetricsManager
         this.quantities = new HashMap<>();
         this.remappedMetrics = new HashMap<>();
 
-        this.lastEvent.put( overallKey, new Event( Event.eventType.MASTER ) );
+        this.lastEvent.put( overallKey, new MetricEvent( MetricEvent.eventType.MASTER ) );
         this.quantities.put( overallKey, ( long ) 0 );
-        this.lastEvent.put( overallAltKey, new Event( Event.eventType.MASTER ) );
+        this.lastEvent.put( overallAltKey, new MetricEvent( MetricEvent.eventType.MASTER ) );
         this.quantities.put( overallAltKey, ( long ) 0 );
     }
 
-    public void addDataPoint( Event event, boolean isSecondaryMetric, @Nullable String originalMetricName )
+    public void addDataPoint(MetricEvent metricEvent, boolean isSecondaryMetric, @Nullable String originalMetricName )
     {
-        String key = event.getName();
+        String key = metricEvent.getName();
 
         if ( isSecondaryMetric
         &&   originalMetricName != null )
         {
-            remappedMetrics.put( event.getName(), originalMetricName );
+            remappedMetrics.put( metricEvent.getName(), originalMetricName );
 
             if ( !this.startTimes.containsKey( originalMetricName ) )
             {
@@ -63,8 +63,8 @@ public class MetricsManager
             this.startTimes.put( overallKey, Instant.now().toEpochMilli() );
         }
 
-        this.lastEvent.put( key, event );
-        this.lastEvent.put( overallKey, event );
+        this.lastEvent.put( key, metricEvent);
+        this.lastEvent.put( overallKey, metricEvent);
 
         long quantity = 0;
         if ( this.quantities.containsKey( key ) )
@@ -72,17 +72,17 @@ public class MetricsManager
             quantity = this.quantities.get( key );
         }
 
-        quantity += event.getQuantity();
+        quantity += metricEvent.getQuantity();
         this.quantities.put( key, quantity );
 
         if ( !isSecondaryMetric )
         {
-            quantity = this.quantities.get( overallKey ) + event.getQuantity();
+            quantity = this.quantities.get( overallKey ) + metricEvent.getQuantity();
             this.quantities.put( overallKey, quantity );
         }
         else
         {
-            quantity = this.quantities.get( overallAltKey ) + event.getQuantity();
+            quantity = this.quantities.get( overallAltKey ) + metricEvent.getQuantity();
             this.quantities.put( overallAltKey, quantity );
         }
     }
@@ -232,9 +232,9 @@ public class MetricsManager
         this.startTimes = new HashMap<>();
         this.quantities = new HashMap<>();
 
-        this.lastEvent.put( overallKey, new Event( Event.eventType.MASTER ) );
+        this.lastEvent.put( overallKey, new MetricEvent( MetricEvent.eventType.MASTER ) );
         this.quantities.put( overallKey, ( long ) 0 );
-        this.lastEvent.put( overallAltKey, new Event( Event.eventType.MASTER ) );
+        this.lastEvent.put( overallAltKey, new MetricEvent( MetricEvent.eventType.MASTER ) );
         this.quantities.put( overallAltKey, ( long ) 0 );
     }
 

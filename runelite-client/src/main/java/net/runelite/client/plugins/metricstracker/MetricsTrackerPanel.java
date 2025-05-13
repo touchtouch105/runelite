@@ -6,11 +6,14 @@ import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.PluginPanel;
 import net.runelite.client.ui.components.DragAndDropReorderPane;
 import net.runelite.client.util.ImageUtil;
+import net.runelite.client.util.SwingUtil;
 
 import javax.inject.Inject;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.plaf.basic.BasicButtonUI;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,13 +23,18 @@ public class MetricsTrackerPanel extends PluginPanel
     private Client client;
     private final MetricsTrackerPlugin plugin;
     private final JPanel overallPanel = new JPanel();
+    private JPanel actionsPanel = new JPanel();
     private final JLabel totalQuantity = new JLabel( "Killed:" );
     private final JLabel totalRate = new JLabel( "KPH:" );
     private final JLabel altQuantity = new JLabel( "Damage:" );
     private final JLabel altRate = new JLabel( "DPS:" );
+    private final JButton monstersButton = new JButton();
+    private final JButton lootButton = new JButton();
     private final Map< MetricsInfoBox.infoBoxType, Map< String, MetricsInfoBox > > infoBoxes = new HashMap<>();
     private final Map< MetricsInfoBox.infoBoxType, MetricsManager > metrics = new HashMap<>();
     private MetricsInfoBox.infoBoxType currentDisplayType = MetricsInfoBox.infoBoxType.MONSTERS;
+    private ImageIcon damageIcon;
+    private ImageIcon lootIcon;
     JComponent infoBoxPanel;
 
     public MetricsTrackerPanel( MetricsTrackerPlugin metricsTrackerPlugin, Client client )
@@ -63,6 +71,10 @@ public class MetricsTrackerPanel extends PluginPanel
         final JLabel overallIcon = new JLabel( new ImageIcon( ImageUtil.loadImageResource(metricsTrackerPlugin.getClass(), "/metrics_tracker_icon.png" ) ) );
         final JPanel overallInfo = new JPanel();
 
+        final BufferedImage expandedImg = ImageUtil.loadImageResource(metricsTrackerPlugin.getClass(), "/metrics_tracker_icon.png" );
+        damageIcon = new ImageIcon(expandedImg);
+        lootIcon = new ImageIcon(expandedImg);
+
         overallInfo.setBackground( ColorScheme.DARKER_GRAY_COLOR );
         overallInfo.setLayout( new GridLayout( 2, 2 ) );
         overallInfo.setBorder( new EmptyBorder( 0, 10, 0, 0) );
@@ -81,42 +93,49 @@ public class MetricsTrackerPanel extends PluginPanel
         overallPanel.add( overallInfo, BorderLayout.CENTER );
 
         infoBoxPanel = new DragAndDropReorderPane();
+        actionsPanel = buildActionsPanel();
 
+        layoutPanel.add( actionsPanel );
         layoutPanel.add( overallPanel );
         layoutPanel.add( infoBoxPanel );
     }
 
-    public void addEvent( Event event )
+    public void addEvent( MetricEvent metricEvent)
     {
-        MetricsInfoBox.infoBoxType type = getInfoBoxType( event.getType() );
-        String eventOriginalName = event.getName();
+        MetricsInfoBox.infoBoxType type = getInfoBoxType( metricEvent.getType() );
+        String eventOriginalName = metricEvent.getName();
         boolean isSecondaryMetric = false;
 
-        if ( event.getType() == Event.eventType.DAMAGE_DEALT )
+        if ( metricEvent.getType() == MetricEvent.eventType.DAMAGE_DEALT )
         {
             isSecondaryMetric = true;
-            event.name = ( "DPS_" + eventOriginalName );
+            metricEvent.name = ( "DPS_" + eventOriginalName );
+        }
+        else if ( metricEvent.getType() == MetricEvent.eventType.ITEM_GP_EARNED )
+        {
+            isSecondaryMetric = true;
+            metricEvent.name = ( "GP_EARNED_" + eventOriginalName );
         }
 
         if ( metrics.containsKey( type ) )
         {
-            metrics.get( type ).addDataPoint( event, isSecondaryMetric, eventOriginalName );
+            metrics.get( type ).addDataPoint(metricEvent, isSecondaryMetric, eventOriginalName );
         }
         else
         {
             metrics.put( type, new MetricsManager() );
-            metrics.get( type ).addDataPoint( event, isSecondaryMetric, eventOriginalName );
+            metrics.get( type ).addDataPoint(metricEvent, isSecondaryMetric, eventOriginalName );
         }
 
         if ( type == currentDisplayType )
         {
-            updateInfoBox( type, event, eventOriginalName );
+            updateInfoBox( type, metricEvent, eventOriginalName );
         }
 
         updateOverallTrackerText();
     }
 
-    private void updateInfoBox( MetricsInfoBox.infoBoxType type, Event event, String eventOriginalName )
+    private void updateInfoBox(MetricsInfoBox.infoBoxType type, MetricEvent metricEvent, String eventOriginalName )
     {
         Map< String, MetricsInfoBox > map;
         MetricsManager metric;
@@ -140,14 +159,24 @@ public class MetricsTrackerPanel extends PluginPanel
         MetricsInfoBox infoBox = infoBoxes.get( type ).get( eventOriginalName );
 
         if ( type == MetricsInfoBox.infoBoxType.MONSTERS
-        &&   event.getType() == Event.eventType.DAMAGE_DEALT )
+        &&   metricEvent.getType() == MetricEvent.eventType.DAMAGE_DEALT )
         {
             infoBox.update( infoBoxPanel,
                             eventOriginalName,
                             metric.getCumulativeQuantity( eventOriginalName ),
                             metric.getQuantityPerHour( eventOriginalName ),
-                            metric.getCumulativeQuantity( event.getName() ),
-                            metric.getQuantityPerSecond( event.getName() ) );
+                            metric.getCumulativeQuantity( metricEvent.getName() ),
+                            metric.getQuantityPerSecond( metricEvent.getName() ) );
+        }
+        else if ( type == MetricsInfoBox.infoBoxType.LOOT
+        &&        metricEvent.getType() == MetricEvent.eventType.ITEM_GP_EARNED )
+        {
+            infoBox.update( infoBoxPanel,
+                            eventOriginalName,
+                            metric.getCumulativeQuantity( eventOriginalName ),
+                            metric.getQuantityPerHour( eventOriginalName ),
+                            metric.getCumulativeQuantity( metricEvent.getName() ),
+                            metric.getQuantityPerHour( metricEvent.getName() ) );
         }
         else
         {
@@ -158,7 +187,7 @@ public class MetricsTrackerPanel extends PluginPanel
         }
     }
 
-    private MetricsInfoBox.infoBoxType getInfoBoxType( Event.eventType eventType )
+    private MetricsInfoBox.infoBoxType getInfoBoxType( MetricEvent.eventType eventType )
     {
         MetricsInfoBox.infoBoxType type = MetricsInfoBox.infoBoxType.NONE;
         switch ( eventType )
@@ -167,7 +196,10 @@ public class MetricsTrackerPanel extends PluginPanel
             case DAMAGE_DEALT:
                 type = MetricsInfoBox.infoBoxType.MONSTERS;
                 break;
-
+            case ITEM_DROPS:
+            case ITEM_GP_EARNED:
+                type = MetricsInfoBox.infoBoxType.LOOT;
+                break;
             default:
                 break;
         }
@@ -247,24 +279,41 @@ public class MetricsTrackerPanel extends PluginPanel
         String altQ;
         String altR;
 
-        if ( !metrics.containsKey( currentDisplayType ) )
-        {
-            totalQuantity.setText( "Killed:" );
-            totalRate.setText( "KPH:" );
-            altQuantity.setText( "Damage:" );
-            altRate.setText( "DPS:" );
-            return;
-        }
-
         switch ( currentDisplayType )
         {
+            case LOOT:
+                quantity = "Quantity:";
+                rate = "Per Hour:";
+                altQ = "Value:";
+                altR = "GP/H:";
+                break;
             case MONSTERS:
             default:
-                quantity = "Killed:" + metrics.get( currentDisplayType ).getOverallCumulativeQuantity( false );
-                rate = "KPH:" + metrics.get( currentDisplayType ).getOverallPerHour( false );
-                altQ = "Damage:" + metrics.get( currentDisplayType ).getOverallCumulativeQuantity( true );
-                altR = "DPS:" + metrics.get( currentDisplayType ).getOverallPerSecond( true );
+                quantity = "Killed:";
+                rate = "KPH:";
+                altQ = "Damage:";
+                altR = "DPS:";
                 break;
+        }
+
+        if ( metrics.containsKey( currentDisplayType ) )
+        {
+            switch ( currentDisplayType )
+            {
+                case LOOT:
+                    quantity += metrics.get( currentDisplayType ).getOverallCumulativeQuantity( false );
+                    rate += metrics.get( currentDisplayType ).getOverallPerHour( false );
+                    altQ += metrics.get( currentDisplayType ).getOverallCumulativeQuantity( true );
+                    altR += metrics.get( currentDisplayType ).getOverallPerHour( true );
+                    break;
+                case MONSTERS:
+                default:
+                    quantity += metrics.get( currentDisplayType ).getOverallCumulativeQuantity( false );
+                    rate += metrics.get( currentDisplayType ).getOverallPerHour( false );
+                    altQ += metrics.get( currentDisplayType ).getOverallCumulativeQuantity( true );
+                    altR += metrics.get( currentDisplayType ).getOverallPerSecond( true );
+                    break;
+            }
         }
 
         totalQuantity.setText( quantity );
@@ -275,7 +324,7 @@ public class MetricsTrackerPanel extends PluginPanel
 
     public void refreshActive()
     {
-        Event event;
+        MetricEvent metricEvent;
         String infoBoxKey;
         for ( MetricsInfoBox.infoBoxType type : metrics.keySet() )
         {
@@ -284,14 +333,68 @@ public class MetricsTrackerPanel extends PluginPanel
                 for ( String key : metrics.get( type ).getKeys() )
                 {
                     infoBoxKey = metrics.get( type ).getMetricKey( key );
-                    event = metrics.get( type ).lastEvent.get( key );
-                    event.quantity = 0;
+                    metricEvent = metrics.get( type ).lastEvent.get( key );
+                    metricEvent.quantity = 0;
 
-                    updateInfoBox( type, event, infoBoxKey );
+                    updateInfoBox( type, metricEvent, infoBoxKey );
                 }
             }
         }
 
         updateOverallTrackerText();
+    }
+
+    private JPanel buildActionsPanel()
+    {
+        final JPanel actionsContainer = new JPanel();
+        actionsContainer.setLayout(new BorderLayout());
+        actionsContainer.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+        actionsContainer.setPreferredSize(new Dimension(0, 30));
+        actionsContainer.setBorder(new EmptyBorder(5, 5, 5, 10));
+
+        final JPanel viewControls = new JPanel(new GridLayout(1, 3, 10, 0));
+        viewControls.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+
+        SwingUtil.removeButtonDecorations(monstersButton);
+        monstersButton.setIcon(damageIcon);
+        monstersButton.setSelectedIcon(damageIcon);
+        SwingUtil.addModalTooltip(monstersButton, "", "Monsters");
+        monstersButton.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+        monstersButton.setUI(new BasicButtonUI()); // substance breaks the layout
+        monstersButton.addActionListener(ev -> loadInfoBoxes( MetricsInfoBox.infoBoxType.MONSTERS ));
+        viewControls.add(monstersButton);
+
+        SwingUtil.removeButtonDecorations(lootButton);
+        lootButton.setIcon(lootIcon);
+        lootButton.setSelectedIcon(lootIcon);
+        SwingUtil.addModalTooltip(lootButton, "", "Loot");
+        lootButton.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+        lootButton.setUI(new BasicButtonUI()); // substance breaks the layout
+        lootButton.addActionListener(ev -> loadInfoBoxes( MetricsInfoBox.infoBoxType.LOOT ));
+        viewControls.add(lootButton);
+
+        final JPanel leftTitleContainer = new JPanel(new BorderLayout(5, 0));
+        leftTitleContainer.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+
+        actionsContainer.add(viewControls, BorderLayout.EAST);
+        actionsContainer.add(leftTitleContainer, BorderLayout.WEST);
+
+        actionsContainer.setVisible( true );
+        return actionsContainer;
+    }
+
+    public void loadInfoBoxes( MetricsInfoBox.infoBoxType type )
+    {
+        currentDisplayType = type;
+
+        for ( MetricsInfoBox.infoBoxType t : infoBoxes.keySet() )
+        {
+            for ( String name : infoBoxes.get( t ).keySet() )
+            {
+                infoBoxes.get( t ).get( name ).reset( infoBoxPanel );
+            }
+        }
+
+        refreshActive();
     }
 }
