@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Tomas Slusny <slusnucky@gmail.com>
+ * Copyright (c) 2025, Jordan Atwood <nightfirecat@nightfirec.at>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,33 +22,23 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.client.plugins.loottracker;
+package net.runelite.client.plugins.cluescrolls.clues;
 
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
+import java.util.Set;
+import java.util.stream.Collectors;
+import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
-@AllArgsConstructor
-@Getter
-@EqualsAndHashCode
-class LootTrackerItem
+public class MapClueTest
 {
-	private final int id;
-	private final String name;
-	private final int quantity;
-	private final int gePrice;
-	private final int haPrice;
-	@Setter
-	private boolean ignored;
-
-	long getTotalGePrice()
+	@Test
+	public void uniqueIds()
 	{
-		return (long) gePrice * quantity;
-	}
+		final Set<Integer> clueIds = MapClue.CLUES.stream()
+			.mapToInt(MapClue::getItemId)
+			.boxed()
+			.collect(Collectors.toUnmodifiableSet());
 
-	long getTotalHaPrice()
-	{
-		return (long) haPrice * quantity;
+		assertEquals(MapClue.CLUES.size(), clueIds.size());
 	}
 }

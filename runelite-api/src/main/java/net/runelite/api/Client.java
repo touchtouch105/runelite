@@ -116,7 +116,7 @@ public interface Client extends OAuthApi, GameEngine
 	 * @param sender the sender/channel name
 	 * @return the message node for the message
 	 */
-	MessageNode addChatMessage(ChatMessageType type, String name, String message, String sender);
+	MessageNode addChatMessage(ChatMessageType type, @Nonnull String name, String message, String sender);
 
 	/**
 	 * Adds a new chat message to the chatbox.
@@ -128,7 +128,7 @@ public interface Client extends OAuthApi, GameEngine
 	 * @param postEvent whether to post the chat message event
 	 * @return the message node for the message
 	 */
-	MessageNode addChatMessage(ChatMessageType type, String name, String message, String sender, boolean postEvent);
+	MessageNode addChatMessage(ChatMessageType type, @Nonnull String name, String message, String sender, boolean postEvent);
 
 	/**
 	 * Gets the current game state.
@@ -797,7 +797,7 @@ public interface Client extends OAuthApi, GameEngine
 	/**
 	 * Gets the value of a given VarClientInt
 	 *
-	 * @param var the {@link VarClientInt}
+	 * @param var the {@link net.runelite.api.gameval.VarClientID}
 	 * @return the value
 	 */
 	int getVarcIntValue(@VarCInt int var);
@@ -805,7 +805,7 @@ public interface Client extends OAuthApi, GameEngine
 	/**
 	 * Gets the value of a given VarClientStr
 	 *
-	 * @param var the {@link VarClientStr}
+	 * @param var the {@link net.runelite.api.gameval.VarClientID}
 	 * @return the value
 	 */
 	String getVarcStrValue(@VarCStr int var);
@@ -813,7 +813,7 @@ public interface Client extends OAuthApi, GameEngine
 	/**
 	 * Sets a VarClientString to the passed value
 	 *
-	 * @param var the {@link VarClientStr}
+	 * @param var the {@link net.runelite.api.gameval.VarClientID}
 	 * @param value the new value
 	 */
 	void setVarcStrValue(@VarCStr int var, String value);
@@ -821,7 +821,7 @@ public interface Client extends OAuthApi, GameEngine
 	/**
 	 * Sets a VarClientInt to the passed value
 	 *
-	 * @param var the {@link VarClientInt}
+	 * @param var the {@link net.runelite.api.gameval.VarClientID}
 	 * @param value the new value
 	 */
 	void setVarcIntValue(@VarCInt int var, int value);
@@ -899,6 +899,14 @@ public interface Client extends OAuthApi, GameEngine
 	 * @return the widget flags table
 	 */
 	HashTable<WidgetConfigNode> getWidgetFlags();
+
+	/**
+	 * Get the widget config for a given widget
+	 * @param w
+	 * @return
+	 */
+	@Nullable
+	WidgetConfigNode getWidgetConfig(Widget w);
 
 	/**
 	 * Gets the widget node component table.
@@ -1115,6 +1123,9 @@ public interface Client extends OAuthApi, GameEngine
 
 	ModelData mergeModels(ModelData[] models, int length);
 	ModelData mergeModels(ModelData ...models);
+
+	Model mergeModels(Model[] models, int length);
+	Model mergeModels(Model... models);
 
 	/**
 	 * Loads and lights a model from the cache
