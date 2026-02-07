@@ -68,6 +68,7 @@ public class ObjectDefinition
 	private boolean obstructsGround = false;
 	private int contouredGround = -1;
 	private int supportsItems = -1;
+	private int raise;
 	private int[] configChangeDest;
 	private int category;
 	private boolean isRotated = false;
@@ -79,10 +80,12 @@ public class ObjectDefinition
 	private int soundFadeOutDuration = 300;
 	private int soundFadeInCurve;
 	private int soundFadeOutCurve;
+	private int soundVisibility = 2;
 	private int ambientSoundChangeTicksMin = 0;
 	private int ambientSoundChangeTicksMax = 0;
 	private boolean blocksProjectile = true;
 	private boolean randomizeAnimStart;
 	private boolean deferAnimChange;
+	private boolean unknown1 = false;
 	private Map<Integer, Object> params = null;
 }

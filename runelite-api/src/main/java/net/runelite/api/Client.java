@@ -27,6 +27,7 @@ package net.runelite.api;
 import com.jagex.oldscape.pub.OAuthApi;
 import java.awt.Canvas;
 import java.awt.Dimension;
+import java.io.FileDescriptor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -145,8 +146,7 @@ public interface Client extends OAuthApi, GameEngine
 	void setGameState(GameState gameState);
 
 	/**
-	 * Causes the client to shutdown. It is faster than
-	 * {@link java.applet.Applet#stop()} because it doesn't wait for 4000ms.
+	 * Causes the client to shutdown.
 	 * This will call {@link System#exit} when it is done
 	 */
 	void stopNow();
@@ -1011,6 +1011,11 @@ public interface Client extends OAuthApi, GameEngine
 	List<Integer> getDBRowsByValue(int table, int column, int tupleIndex, Object value);
 
 	/**
+	 * Gets all rows in a DBTable
+	 */
+	List<Integer> getDBTableRows(int table);
+
+	/**
 	 * Get a map element config by id
 	 *
 	 * @param id the id
@@ -1870,6 +1875,12 @@ public interface Client extends OAuthApi, GameEngine
 	Widget getSelectedWidget();
 
 	/**
+	 * Gets the current active {@link net.runelite.api.widgets.WidgetType#INPUT_FIELD} Widget
+	 */
+	@Nullable
+	Widget getFocusedInputFieldWidget();
+
+	/**
 	 * Returns client item composition cache
 	 */
 	NodeCache getItemCompositionCache();
@@ -2396,4 +2407,38 @@ public interface Client extends OAuthApi, GameEngine
 	 * animates transparency, otherwise it will share a reference. All other fields share a reference.
 	 */
 	Model applyTransformations(Model model, @Nullable Animation animA, int frameA, @Nullable Animation animB, int frameB);
+
+	/**
+	 * Creates a SceneTilePaint instance, which can be attached to a Tile to control its appearance.
+	 *
+	 * @see Tile#setSceneTilePaint(SceneTilePaint)
+	 *
+	 * @param swColor the color of the south-west corner of the tile
+	 * @param seColor the color of the south-east corner of the tile
+	 * @param neColor the color of the north-east corner of the tile
+	 * @param nwColor the color of the north-west corner of the tile
+	 * @param texture the texture to render for the tile, or -1 to use the colors
+	 * @param minimapRgb the color to use when rendering the minimap
+	 * @param flatShade whether the tile is flat
+	 * @return the newly created SceneTilePaint
+	 */
+	SceneTilePaint createSceneTilePaint(int swColor, int seColor, int neColor, int nwColor, int texture, int minimapRgb, boolean flatShade);
+
+	/**
+	 * Get the entity that the camera is focused on
+	 *
+	 * @return
+	 */
+	CameraFocusableEntity getCameraFocusEntity();
+
+	/**
+	 * Find the worldview a given worldpoint belongs in
+	 * @param point
+	 * @return
+	 */
+	@Nonnull
+	WorldView findWorldViewFromWorldPoint(WorldPoint point);
+
+	@Nullable
+	FileDescriptor getSocketFD();
 }

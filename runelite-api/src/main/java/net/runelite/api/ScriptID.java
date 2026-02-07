@@ -272,7 +272,7 @@ public final class ScriptID
 	 * <li> int (WidgetID) * 16, various widgets making up the bank interface </li>
 	 * </ul>
 	 */
-	@ScriptArguments(integer = 17)
+	@ScriptArguments(integer = 20)
 	public static final int BANKMAIN_SEARCH_REFRESH = 283;
 
 	@ScriptArguments(integer = 6)
@@ -296,6 +296,9 @@ public final class ScriptID
 	@ScriptArguments(integer = 2)
 	public static final int TOPLEVEL_REDRAW = 907;
 
+	@ScriptArguments(integer = 2)
+	public static final int TOPLEVEL_RESIZE_CUSTOMISE = 920;
+
 	/**
 	 * Called to set position of an xpdrop text and sprite(s)
 	 * <ul>
@@ -305,7 +308,7 @@ public final class ScriptID
 	@ScriptArguments(integer = 4, string = 1)
 	public static final int XPDROPS_SETDROPSIZE = 996;
 
-	@ScriptArguments(integer = 34)
+	@ScriptArguments(integer = 35)
 	public static final int BANKMAIN_INIT = 274;
 
 	/**
@@ -314,10 +317,10 @@ public final class ScriptID
 	 * <li>int (WidgetID) * 17, various widgets making up the bank interface</li>
 	 * </ul>
 	 */
-	@ScriptArguments(integer = 17)
+	@ScriptArguments(integer = 20)
 	public static final int BANKMAIN_BUILD = 277;
 
-	@ScriptArguments(integer = 19)
+	@ScriptArguments(integer = 22)
 	public static final int BANKMAIN_FINISHBUILDING = 505;
 
 	@ScriptArguments()
@@ -334,7 +337,7 @@ public final class ScriptID
 	 * These can be retrieved from the onInvTransmitListener of BANK_ITEM_CONTAINER. Note that this array also
 	 * contains the script ID for the bank layout script in the first index
 	 */
-	@ScriptArguments(integer = 18)
+	@ScriptArguments(integer = 21)
 	public static final int BANKMAIN_SEARCH_TOGGLE = 281;
 
 	@ScriptArguments(integer = 6)
@@ -474,7 +477,7 @@ public final class ScriptID
 	@ScriptArguments(integer = 3)
 	public static final int POTIONSTORE_DOSE_CHANGE = 6555;
 
-	@ScriptArguments(integer = 5)
+	@ScriptArguments(integer = 6)
 	public static final int FAIRYRINGS_SORT_UPDATE = 402;
 
 	@ScriptArguments(integer = 1, string = 1)
@@ -491,4 +494,13 @@ public final class ScriptID
 
 	@ScriptArguments(integer = 1)
 	public static final int DOM_LOOT_CLAIM = 7928;
+
+	@ScriptArguments(integer = 4)
+	public static final int CAMERA_SET_ZOOM_LIMITS = 605;
+
+	@ScriptArguments(integer = 6, string = 9)
+	public static final int INTERFACE_INV_DRAW_SLOT_BIG = 154;
+
+	@ScriptArguments(integer = 4)
+	public static final int BANKMAIN_POPUP_TAB_DRAW = 9221;
 }
