@@ -231,8 +231,9 @@ public class BankTagsPlugin extends Plugin implements BankTagsService
 		Widget w = client.getWidget(InterfaceID.Bankmain.UNIVERSE);
 		if (w != null)
 		{
-			client.createScriptEvent(w.getOnLoadListener())
+			client.createScriptEventBuilder(w.getOnLoadListener())
 				.setSource(w)
+				.build()
 				.run();
 		}
 	}
@@ -308,7 +309,7 @@ public class BankTagsPlugin extends Plugin implements BankTagsService
 			.mapToObj(ItemVariationMapping::getVariations)
 			.flatMap(Collection::stream)
 			.distinct()
-			.filter(i -> itemManager.getItemComposition(i).isTradeable())
+			.filter(i -> itemManager.getItemComposition(i).isGeTradeable())
 			.limit(MAX_RESULT_COUNT)
 			.collect(Collectors.toCollection(TreeSet::new));
 
@@ -401,12 +402,14 @@ public class BankTagsPlugin extends Plugin implements BankTagsService
 	@Subscribe
 	public void onMenuEntryAdded(MenuEntryAdded event)
 	{
-		if (event.getActionParam1() == InterfaceID.Bankmain.ITEMS
+		if ((event.getActionParam1() == InterfaceID.Bankmain.ITEMS
 			&& (event.getOption().equals("Examine")
 			// Potion storage has no Examine
 			|| (event.getOption().equals("Withdraw-All-but-1") && !client.getItemContainer(InventoryID.BANK).contains(event.getItemId()))))
+			// Shared bank (group storage) items
+			|| (event.getActionParam1() == InterfaceID.SharedBank.ITEMS && event.getOption().equals("Examine")))
 		{
-			Widget container = client.getWidget(InterfaceID.Bankmain.ITEMS);
+			Widget container = client.getWidget(event.getActionParam1());
 			Widget item = container.getChild(event.getActionParam0());
 			int itemId = item.getItemId();
 

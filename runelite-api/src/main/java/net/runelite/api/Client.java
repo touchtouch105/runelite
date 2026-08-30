@@ -238,7 +238,7 @@ public interface Client extends OAuthApi, GameEngine
 	 * @see #getCameraX()
 	 * @return
 	 */
-	double getCameraFpX();
+	float getCameraFpX();
 
 	/**
 	 * Gets the y-axis coordinate of the camera.
@@ -255,7 +255,7 @@ public interface Client extends OAuthApi, GameEngine
 	 * @see #getCameraY()
 	 * @return
 	 */
-	double getCameraFpY();
+	float getCameraFpY();
 
 	/**
 	 * Gets the z-axis coordinate of the camera.
@@ -272,13 +272,13 @@ public interface Client extends OAuthApi, GameEngine
 	 * @see #getCameraZ()
 	 * @return
 	 */
-	double getCameraFpZ();
+	float getCameraFpZ();
 
 	/**
 	 * Gets the pitch of the camera.
 	 * <p>
-	 * The value returned by this method is measured in JAU, or Jagex
-	 * Angle Unit, which is 1/1024 of a revolution.
+	 * The value returned by this method is measured in JAU14, or Jagex
+	 * Angle Unit (14 bit), where each unit is equivalent to 2π/(2^14) radians.
 	 *
 	 * @return the camera pitch
 	 */
@@ -289,10 +289,13 @@ public interface Client extends OAuthApi, GameEngine
 	 * @see #getCameraPitch()
 	 * @return
 	 */
-	double getCameraFpPitch();
+	float getCameraFpPitch();
 
 	/**
 	 * Gets the yaw of the camera.
+	 * <p>
+	 * The value returned by this method is measured in JAU14, or Jagex
+	 * Angle Unit (14 bit), where each unit is equivalent to 2π/(2^14) radians.
 	 *
 	 * @return the camera yaw
 	 */
@@ -303,7 +306,7 @@ public interface Client extends OAuthApi, GameEngine
 	 * @see #getCameraYaw()
 	 * @return
 	 */
-	double getCameraFpYaw();
+	float getCameraFpYaw();
 
 	/**
 	 * Gets the current world number of the logged in player.
@@ -540,22 +543,6 @@ public interface Client extends OAuthApi, GameEngine
 	Widget getWidget(@Component int componentId);
 
 	/**
-	 * Gets an array containing the x-axis canvas positions
-	 * of all widgets.
-	 *
-	 * @return array of x-axis widget coordinates
-	 */
-	int[] getWidgetPositionsX();
-
-	/**
-	 * Gets an array containing the y-axis canvas positions
-	 * of all widgets.
-	 *
-	 * @return array of y-axis widget coordinates
-	 */
-	int[] getWidgetPositionsY();
-
-	/**
 	 * Gets the current run energy of the logged in player.
 	 *
 	 * @return the run energy in units of 1/100th of an percentage
@@ -641,6 +628,18 @@ public interface Client extends OAuthApi, GameEngine
 	void setMenuEntries(MenuEntry[] entries);
 
 	/**
+	 * Gets whether the mouse over text in top-left corner of the screen is enabled
+	 * @return
+	 */
+	boolean isMouseoverTextEnabled();
+
+	/**
+	 * Sets whether the mouse over text in top-left corner of the screen is enabled
+	 * @param enabled
+	 */
+	void setMouseoverTextEnabled(boolean enabled);
+
+	/**
 	 * Checks whether a right-click menu is currently open.
 	 *
 	 * @return true if a menu is open, false otherwise
@@ -700,15 +699,6 @@ public interface Client extends OAuthApi, GameEngine
 	 */
 	@Deprecated
 	int getMenuWidth();
-
-	/**
-	 * Gets the angle of the map, or target camera yaw.
-	 *
-	 * @return the map angle
-	 * @see #getCameraYawTarget()
-	 */
-	@Deprecated
-	int getMapAngle();
 
 	/**
 	 * Checks whether the client window is currently resized.
@@ -1575,12 +1565,12 @@ public interface Client extends OAuthApi, GameEngine
 	void runScript(Object... args);
 
 	/**
-	 * Creates a blank ScriptEvent for executing a ClientScript2 script
+	 * Creates a blank ScriptEventBuilder for building a ScriptEvent to execute a ClientScript2 script
 	 *
 	 * @param args the script id, then any additional arguments to execute the script with
 	 * @see ScriptID
 	 */
-	ScriptEvent createScriptEvent(Object ...args);
+	ScriptEventBuilder createScriptEventBuilder(Object ...args);
 
 	/**
 	 * Checks whether or not there is any active hint arrow.
@@ -1746,39 +1736,39 @@ public interface Client extends OAuthApi, GameEngine
 	 * Typically this is the player position, but can be other points in cutscenes or in free camera mode.
 	 * @return
 	 */
-	double getCameraFocalPointX();
+	float getCameraFocalPointX();
 
 	/**
 	 * Sets the camera focus point x. Requires the {@link #getCameraMode()} to be free camera.
 	 * @param x
 	 */
-	void setCameraFocalPointX(double x);
+	void setCameraFocalPointX(float x);
 
 	/**
 	 * Get the camera focus point y
 	 * Typically this is the player position, but can be other points in cutscenes or in free camera mode.
 	 * @return
 	 */
-	double getCameraFocalPointY();
+	float getCameraFocalPointY();
 
 	/**
 	 * Sets the camera focus point y. Requires the {@link #getCameraMode()} to be free camera.
 	 * @param y
 	 */
-	void setCameraFocalPointY(double y);
+	void setCameraFocalPointY(float y);
 
 	/**
 	 * Get the camera focus point z
 	 * Typically this is the player position, but can be other points in cutscenes or in free camera mode.
 	 * @return
 	 */
-	double getCameraFocalPointZ();
+	float getCameraFocalPointZ();
 
 	/**
 	 * Sets the camera focus point z. Requires the {@link #getCameraMode()} to be free camera.
 	 * @param z
 	 */
-	void setCameraFocalPointZ(double z);
+	void setCameraFocalPointZ(float z);
 
 	/**
 	 * Sets the normal moving speed when using oculus orb (default value is 12)
@@ -2163,21 +2153,6 @@ public interface Client extends OAuthApi, GameEngine
 	int[][][] getInstanceTemplateChunks();
 
 	/**
-	 * Returns a 2D array containing XTEA encryption keys used to decrypt
-	 * map region files.
-	 * <p>
-	 * The array maps the region keys at index {@code n} to the region
-	 * ID held in {@link #getMapRegions()} at {@code n}.
-	 * <p>
-	 * The array of keys for the region make up a 128-bit encryption key
-	 * spread across 4 integers.
-	 *
-	 * @return the XTEA encryption keys
-	 */
-	@Deprecated
-	int[][] getXteaKeys();
-
-	/**
 	 * Checks whether the scene is in an instanced region.
 	 * @see WorldView#isInstance()
 	 */
@@ -2429,6 +2404,7 @@ public interface Client extends OAuthApi, GameEngine
 	 *
 	 * @return
 	 */
+	@Nullable
 	CameraFocusableEntity getCameraFocusEntity();
 
 	/**

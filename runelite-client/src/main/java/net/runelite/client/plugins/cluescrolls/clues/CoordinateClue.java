@@ -279,7 +279,7 @@ public class CoordinateClue extends ClueScroll implements LocationClueScroll
 		CoordinateClue.builder()
 			.itemId(ItemID.TRAIL_MEDIUM_SEXTANT_SAIL)
 			.location(new WorldPoint(3183, 2453, 0))
-			.directions("Center of the Great Conch.")
+			.directions("Center of the Great Conch (CJQ).")
 			.build(),
 		// Hard
 		CoordinateClue.builder()
@@ -319,7 +319,7 @@ public class CoordinateClue extends ClueScroll implements LocationClueScroll
 			.build(),
 		CoordinateClue.builder()
 			.itemId(ItemID.TRAIL_HARD_SEXTANT_EXP5)
-			.location(new WorldPoint(3544, 3256, 0))
+			.location(new WorldPoint(3544, 3255, 0))
 			.directions("North-east of Burgh de Rott.")
 			.enemy(SARADOMIN_WIZARD)
 			.build(),

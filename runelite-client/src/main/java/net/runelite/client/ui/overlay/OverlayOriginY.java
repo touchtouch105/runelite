@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Adam <Adam@sigterm.info>
+ * Copyright (c) 2026, Adam <Adam@sigterm.info>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,19 +22,16 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.api.events;
+package net.runelite.client.ui.overlay;
 
-import lombok.Data;
-
-/**
- * Called every game cycle the client is dragging a widget on
- * the cursor.
- */
-@Data
-public class DraggingWidgetChanged
+enum OverlayOriginY
 {
-	/**
-	 * Whether a widget is currently being dragged.
-	 */
-	private boolean draggingWidget;
+	TOP,
+	CENTER,
+	BOTTOM,
+
+	HUD_CONTAINER_TOP,
+	HUD_CONTAINER_BOTTOM,
+
+	CHATBOX_TOP,
 }

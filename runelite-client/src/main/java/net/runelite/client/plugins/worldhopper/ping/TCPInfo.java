@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, dekvall <https://github.com/dekvall>
+ * Copyright (c) 2026 Abex
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,20 +22,15 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.client.plugins.grounditems;
+package net.runelite.client.plugins.worldhopper.ping;
 
-import lombok.RequiredArgsConstructor;
-import lombok.Value;
-
-@Value
-@RequiredArgsConstructor
-class NamedQuantity
+public interface TCPInfo
 {
-	private final String name;
-	private final int quantity;
+	/**
+	 * Round trip time in µs
+	 */
+	long getRTT();
 
-	NamedQuantity(GroundItem groundItem)
-	{
-		this(groundItem.getName(), groundItem.getQuantity());
-	}
+	long getTransmitted();
+	long getRetransmitted();
 }
